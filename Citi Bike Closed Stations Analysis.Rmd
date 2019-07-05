@@ -14,6 +14,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 This is just a basic test of a proposition that's so obviously true that it doesn't really need to be tested: Does the (temporary) closing of a Citi Bike station increase ridership at nearby stations?
 
+
+New stuff here..
+
 The answer it turns out -- don't even bother with the drumroll -- is that yes, rides increase (by about 9 percent at the three nearest stations, after controlling for a few variables that likely affect ridership).
 
 I've written this up mostly as a means to walk through how the data need to be cleaned, how the data need to be munged in order to answer the question, and some of the statistical tests that can be run to estimate the effect of station closure on ridership.
