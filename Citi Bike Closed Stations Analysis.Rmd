@@ -23,7 +23,7 @@ I've written this up mostly as a means to walk through how the data need to be c
 
 
 
-```{r eruptions, eval=FALSE}
+```{r packages, eval=FALSE}
 
 ### Load Some Packages --------------------------------------------------------
 require(readr)
@@ -73,7 +73,7 @@ The code below addresses both of these issues. To handle the first, I split the 
 
 The lack of seconds in the observations from the first half of 2015 affected how I read / cleaned the date. The incredibly helpful lubridate package has the very useful`mdy_hms()` function, but because there was no "s" in many of the records, I had to write my own kludgy workaround to make sure the dates were properly formatted.
 
-```{r tabsets, eval=FALSE}
+```{r munge, eval=FALSE}
 
 # First, use the month variable created at the end of the prefious code block to split the data into two different data frames, starting with the more recent data as it was easier to handle. Then create clean date and time variables.
 
@@ -150,7 +150,7 @@ Now that the data have been cleaned the real thinking work begins. How do the da
 
 First thing was to summarize the data to get the number of trip originations per day per station. Of interest fromn this data frame are the stations that have missing values for certain days, indicating that no rides occurred on those days. Later, I will classify any station (i) that was missing from this data frame (citi_df_date) and (ii) that had more than zero rides on a date prior to the date for which ride data were missing as having zero rides (aka trip_originations in the data below) for that day. 
 
-```{r "word", eval=FALSE}
+```{r group, eval=FALSE}
 citi_df_date <- citi_df_all %>% group_by(start_station_id, Date_asdate) %>% 
                             summarize(number_trip_originations = n())
 ```
@@ -159,7 +159,7 @@ citi_df_date <- citi_df_all %>% group_by(start_station_id, Date_asdate) %>%
 
 So, first I'm going to identify stations that had zero rides on certain days. This will be done by creating a variable that identifies breaks in a series of dates and then calculates the number of days between the start date and end date of the break. A station then gets classified as a zero ride station for a particular day if that day falls within this interval.
 
-```{r "stuff", eval = FALSE}
+```{r zero_ride, eval = FALSE}
 ### Calculate breaks in the data -------------------------------------------------------------
 a <- citi_df_date %>% 
          group_by(start_station_id) %>% 
@@ -191,7 +191,7 @@ Now I have to find the closest stations to these zero ride stations. This can be
 
 These two can be merged together by date to associate all stations that had zero rides on a given day with all stations that had greater than zero rides on a given day. This data frame will be the basis for calculating distances between stations in order to identify nearby stations.
 
-```{r "tabset", eval = FALSE}
+```{r open, eval = FALSE}
 
 ### Create a Data Frame of Open Stations Where Primary Key = Station + Date ------------------
 
@@ -222,7 +222,7 @@ ij_pre <- ij_pre %>% filter(!is.na(start_station_id)) %>% filter(zero_ride_stati
 
 A fair question to ask is what qualifies a station as being "nearby" a closed Citi Bike station. There are certainly many ways this could be operationalized, but for the purpose of this quick study, I classified a station as being a closed station on a particular day if it (i) had greater than zero trip originations on that day and (ii) was one of the three stations closest to that other station. 
 
-```{r "more", eval = FALSE}
+```{r calc_distance, eval = FALSE}
 
 ### Use `pointDistance()` from Raster Package to Calculate Distance Between Stations ---------
 ij1 <- ij_pre %>% rowwise() %>% mutate(pd = pointDistance(c(zero_ride_station_latitude, zero_ride_station_longitude), c(start_station_latitude, start_station_longitude), lonlat = FALSE))
@@ -237,7 +237,7 @@ ij2 <- ij1 %>%
 
 ###
 
-```{r "yep", eval = FALSE}
+```{r analysis, eval = FALSE}
 
 ### Pull in the daily citibike data to get the number of trips per day, so that I will know how many trips were taken ad nearby stations on the days that the closed stations were closed.
 citi_df_date_small <- citi_df_date %>% dplyr::select(start_station_id, Date_asdate, number_trip_originations)
@@ -254,7 +254,7 @@ I need to create a data set that allows me to know which rides were taken:
 
 A key point in understanding the comments in the code below is that when I use the label "closed station," I am referring to any station that was closed at some point during the sample period. 
 
-```{r "kl", eval = FALSE}
+```{r closed, eval = FALSE}
 
 ### Get unique list of all closed stations ---------------------------------------------------
 closed_stations <- ij2 %>% 
@@ -314,7 +314,7 @@ all_trips_weather <- inner_join(all_trips, weather, by = c("Date_asdate" = "DATE
 
 ## Conduct Data Analysis
 
-```{r "analysis", echo = FALSE}
+```{r "more_analysis", echo = FALSE}
 suppressMessages(require(readr))
 suppressMessages(require(dplyr))
 suppressMessages(require(broom))
